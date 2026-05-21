@@ -4,13 +4,44 @@
 \RequirePackage[T1]{fontenc}
 \RequirePackage[utf8]{inputenc}
 \RequirePackage[brazil]{babel}
-\RequirePackage[a4paper,top=3cm,bottom=3cm,left=3cm,right=3cm,includehead]{geometry}
+\RequirePackage[a4paper,top=1.25cm,bottom=3cm,left=3cm,right=3cm,includehead]{geometry}
 \RequirePackage{graphicx}
 \RequirePackage{xcolor}
 \RequirePackage{setspace}
 \RequirePackage{titlesec}
 \RequirePackage{fancyhdr}
-\RequirePackage{times}
+% Prefer system fonts for header text (Calibri). Use fontspec when available
+% so users can compile with XeLaTeX/LuaLaTeX to get Calibri. Fall back to
+% a sans-serif family when fontspec is not available.
+% Load fontspec only on XeTeX or LuaTeX engines. For pdfTeX use a safe fallback.
+\RequirePackage{iftex}
+\ifXeTeX
+  \RequirePackage{fontspec}
+  \IfFileExists{fonts/Calibri.ttf}{%
+    \newfontfamily\headfont[Path=fonts/]{Calibri}
+  }{%
+    \IfFontExistsTF{Calibri}{\newfontfamily\headfont{Calibri}}{%
+      \IfFontExistsTF{Arial}{\newfontfamily\headfont{Arial}}{%
+        \IfFontExistsTF{DejaVu Sans}{\newfontfamily\headfont{DejaVu Sans}}{\newcommand\headfont{\sffamily}}
+      }
+    }
+  }
+\else\ifLuaTeX
+  \RequirePackage{fontspec}
+  \IfFileExists{fonts/Calibri.ttf}{%
+    \newfontfamily\headfont[Path=fonts/]{Calibri}
+  }{%
+    \IfFontExistsTF{Calibri}{\newfontfamily\headfont{Calibri}}{%
+      \IfFontExistsTF{Arial}{\newfontfamily\headfont{Arial}}{%
+        \IfFontExistsTF{DejaVu Sans}{\newfontfamily\headfont{DejaVu Sans}}{\newcommand\headfont{\sffamily}}
+      }
+    }
+  }
+\else
+  % pdfTeX or other engines: do not load fontspec (would fatal); use sans fallback
+  \RequirePackage{helvet}
+  \newcommand\headfont{\sffamily}
+\fi\fi
 
 \onehalfspacing
 \setlength{\parindent}{1.25cm}
@@ -27,11 +58,22 @@
 
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[C]{%
-  \begin{tabular}{c}
-    \includegraphics[width=9.2cm]{./images/header.png}\\[-1mm]
-    {\footnotesize\bfseries\color[gray]{0.65}MODELO DE ENTREGA - ARQUITETURA DE SOFTWARE, CIÊNCIA DE DADOS E CYBERSECURITY}
-  \end{tabular}%
+% Left-align header to match model.pdf
+\fancyhead[L]{%
+  \begin{minipage}[t]{\textwidth}\raggedright
+    % Use the combined image with subtitle if present; otherwise fall back to original
+    \IfFileExists{./images/header_with_subtitle.png}{%
+      \includegraphics[width=\linewidth]{./images/header_with_subtitle.png}\\[-1mm]
+    }{%
+      % Prefer cropped header if available
+      \IfFileExists{./images/header_cropped.png}{%
+        \includegraphics[width=9cm]{./images/header_cropped.png}\\[-1mm]
+      }{%
+        \includegraphics[width=9cm]{./images/header.png}\\[-1mm]
+      }
+      {\headfont\footnotesize\bfseries\color[gray]{0.65}MODELO DE ENTREGA - ARQUITETURA DE SOFTWARE, CIÊNCIA DE DADOS E CYBERSECURITY}
+    }
+  \end{minipage}%
 }
 \renewcommand{\headrulewidth}{0pt}
 \setlength{\headheight}{62pt}
